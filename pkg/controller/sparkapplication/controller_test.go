@@ -1614,9 +1614,9 @@ func TestIngressWithSubpathAffectsSparkConfiguration(t *testing.T) {
 	if deployedApp.Spec.SparkConf["spark.ui.proxyBase"] != "/"+app.Namespace+"/"+app.Name {
 		t.Log("The spark configuration does not reflect the subpath expected by the ingress")
 	}
-	if deployedApp.Spec.SparkConf["spark.ui.proxyRedirectUri"] != "/" {
-		t.Log("The spark configuration does not reflect the proxyRedirectUri expected by the ingress")
-	}
+	//if deployedApp.Spec.SparkConf["spark.ui.proxyRedirectUri"] != "/" {
+	//	t.Log("The spark configuration does not reflect the proxyRedirectUri expected by the ingress")
+	//}
 }
 
 func TestIngressWithClassName(t *testing.T) {
