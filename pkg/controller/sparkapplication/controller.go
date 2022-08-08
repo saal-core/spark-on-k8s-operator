@@ -700,7 +700,7 @@ func (c *Controller) submitSparkApplication(app *v1beta2.SparkApplication) *v1be
 						if app.Spec.SparkConf == nil {
 							app.Spec.SparkConf = make(map[string]string)
 						}
-						//app.Spec.SparkConf["spark.ui.proxyBase"] = ingressURL.Path
+						app.Spec.SparkConf["spark.ui.proxyBase"] = ingressURL.Path
 						//app.Spec.SparkConf["spark.ui.proxyRedirectUri"] = "/"
 					}
 					ingress, err := createSparkUIIngress(app, *service, ingressURL, c.ingressClassName, c.kubeClient)

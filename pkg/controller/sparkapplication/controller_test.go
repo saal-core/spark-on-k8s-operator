@@ -1611,9 +1611,9 @@ func TestIngressWithSubpathAffectsSparkConfiguration(t *testing.T) {
 		t.Fatal("The ingress subpath was not created successfully.")
 	}
 	// The controller doesn't sync changes to the sparkConf performed by submitSparkApplication back to the kubernetes API server.
-	//if deployedApp.Spec.SparkConf["spark.ui.proxyBase"] != "/"+app.Namespace+"/"+app.Name {
-	//	t.Log("The spark configuration does not reflect the subpath expected by the ingress")
-	//}
+	if deployedApp.Spec.SparkConf["spark.ui.proxyBase"] != "/"+app.Namespace+"/"+app.Name {
+		t.Log("The spark configuration does not reflect the subpath expected by the ingress")
+	}
 	//if deployedApp.Spec.SparkConf["spark.ui.proxyRedirectUri"] != "/" {
 	//	t.Log("The spark configuration does not reflect the proxyRedirectUri expected by the ingress")
 	//}
