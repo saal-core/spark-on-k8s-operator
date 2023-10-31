@@ -97,7 +97,7 @@ func createSparkUIIngress_v1(app *v1beta2.SparkApplication, service SparkService
 	ingressURLPath := ingressURL.Path
 	// If we're serving on a subpath, we need to ensure we create capture groups
 	if ingressURLPath != "" && ingressURLPath != "/" {
-		ingressURLPath = ingressURLPath + "(/|$)(.*)"
+		ingressURLPath = ingressURLPath
 	}
 
 	implementationSpecific := networkingv1.PathTypeImplementationSpecific
@@ -141,7 +141,7 @@ func createSparkUIIngress_v1(app *v1beta2.SparkApplication, service SparkService
 		if ingress.ObjectMeta.Annotations == nil {
 			ingress.ObjectMeta.Annotations = make(map[string]string)
 		}
-		ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/$2"
+		ingress.ObjectMeta.Annotations["konghq.com/strip-path"] = "true"
 	}
 	if len(ingressTlsHosts) != 0 {
 		ingress.Spec.TLS = ingressTlsHosts
@@ -173,7 +173,7 @@ func createSparkUIIngress_legacy(app *v1beta2.SparkApplication, service SparkSer
 	ingressURLPath := ingressURL.Path
 	// If we're serving on a subpath, we need to ensure we create capture groups
 	if ingressURLPath != "" && ingressURLPath != "/" {
-		ingressURLPath = ingressURLPath + "(/|$)(.*)"
+		ingressURLPath = ingressURLPath
 	}
 
 	ingress := extensions.Ingress{
@@ -213,7 +213,7 @@ func createSparkUIIngress_legacy(app *v1beta2.SparkApplication, service SparkSer
 		if ingress.ObjectMeta.Annotations == nil {
 			ingress.ObjectMeta.Annotations = make(map[string]string)
 		}
-		ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/$2"
+		ingress.ObjectMeta.Annotations["konghq.com/strip-path"] = "true"
 	}
 	if len(ingressTlsHosts) != 0 {
 		ingress.Spec.TLS = convertIngressTlsHostsToLegacy(ingressTlsHosts)

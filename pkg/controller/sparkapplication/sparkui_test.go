@@ -385,7 +385,7 @@ func TestCreateSparkUIIngress(t *testing.T) {
 		ingressRule := ingress.Spec.Rules[0]
 		// If we have a path, then the ingress adds capture groups
 		if ingressRule.IngressRuleValue.HTTP.Paths[0].Path != "" && ingressRule.IngressRuleValue.HTTP.Paths[0].Path != "/" {
-			test.expectedIngress.ingressURL.Path = test.expectedIngress.ingressURL.Path + "(/|$)(.*)"
+			test.expectedIngress.ingressURL.Path = test.expectedIngress.ingressURL.Path
 		}
 		if ingressRule.Host+ingressRule.IngressRuleValue.HTTP.Paths[0].Path != test.expectedIngress.ingressURL.Host+test.expectedIngress.ingressURL.Path {
 
@@ -562,7 +562,7 @@ func TestCreateSparkUIIngress(t *testing.T) {
 				ingressName: fmt.Sprintf("%s-ui-ingress", app1.GetName()),
 				ingressURL:  parseURLAndAssertError("ingress.clusterName.com/"+app1.GetNamespace()+"/"+app1.GetName(), t),
 				annotations: map[string]string{
-					"nginx.ingress.kubernetes.io/rewrite-target": "/$2",
+					"konghq.com/strip-path": "true",
 				},
 			},
 			expectError: false,

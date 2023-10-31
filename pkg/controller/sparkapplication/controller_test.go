@@ -1607,16 +1607,16 @@ func TestIngressWithSubpathAffectsSparkConfiguration(t *testing.T) {
 	if ingresses == nil || ingresses.Items == nil || len(ingresses.Items) != 1 {
 		t.Fatal("The ingress does not exist, has no items, or wrong amount of items")
 	}
-	if ingresses.Items[0].Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Path != "/"+app.Namespace+"/"+app.Name+"(/|$)(.*)" {
+	if ingresses.Items[0].Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Path != "/"+app.Namespace+"/"+app.Name {
 		t.Fatal("The ingress subpath was not created successfully.")
 	}
 	// The controller doesn't sync changes to the sparkConf performed by submitSparkApplication back to the kubernetes API server.
 	if deployedApp.Spec.SparkConf["spark.ui.proxyBase"] != "/"+app.Namespace+"/"+app.Name {
 		t.Log("The spark configuration does not reflect the subpath expected by the ingress")
 	}
-	if deployedApp.Spec.SparkConf["spark.ui.proxyRedirectUri"] != "/" {
-		t.Log("The spark configuration does not reflect the proxyRedirectUri expected by the ingress")
-	}
+	//if deployedApp.Spec.SparkConf["spark.ui.proxyRedirectUri"] != "/" {
+	//	t.Log("The spark configuration does not reflect the proxyRedirectUri expected by the ingress")
+	//}
 }
 
 func TestIngressWithClassName(t *testing.T) {
