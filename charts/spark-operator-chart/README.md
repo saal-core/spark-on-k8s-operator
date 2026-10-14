@@ -109,6 +109,7 @@ See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall) for command docum
 | controller.uiIngress.enable | bool | `false` | Specifies whether to create ingress for Spark web UI. `controller.uiService.enable` must be `true` to enable ingress. |
 | controller.uiIngress.urlFormat | string | `""` | Ingress URL format. Required if `controller.uiIngress.enable` is true. |
 | controller.uiIngress.ingressClassName | string | `""` | Optionally set the ingressClassName. |
+| controller.uiIngress.controllerType | string | `nginx` | The ingress controller that serves the Spark web UI, either `nginx` or `kong`. Only affects path-based `controller.uiIngress.urlFormat` values; host-based formats work with any ingress controller. |
 | controller.uiIngress.tls | list | `[]` | Optionally set default TLS configuration for the Spark UI's ingress. `ingressTLS` in the SparkApplication spec overrides this. |
 | controller.uiIngress.annotations | object | `{}` | Optionally set default ingress annotations for the Spark UI's ingress. `ingressAnnotations` in the SparkApplication spec overrides this. |
 | controller.batchScheduler.enable | bool | `false` | Specifies whether to enable batch scheduler for spark jobs scheduling. If enabled, users can specify batch scheduler name in spark application. |

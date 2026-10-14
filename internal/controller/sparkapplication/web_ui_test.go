@@ -81,6 +81,20 @@ func TestConfigWebUI(t *testing.T) {
 			},
 		},
 		{
+			name: "ingress format with path, kong controller",
+			options: Options{
+				EnableUIService:       true,
+				IngressControllerType: common.IngressControllerKong,
+				IngressURLFormat:      "ingress.example.com/{{ $appNamespace }}/{{ $appName }}",
+			},
+			app: appBase.DeepCopy(),
+			wantConf: map[string]string{
+				// proxyRedirectUri is not defaulted under Kong: it would redirect to
+				// the root of the host and drop the per-application subpath.
+				common.SparkUIProxyBase: "/default/test-app",
+			},
+		},
+		{
 			name: "existing config preserved",
 			options: Options{
 				EnableUIService:  true,

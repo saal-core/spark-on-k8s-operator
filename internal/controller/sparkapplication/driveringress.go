@@ -107,11 +107,7 @@ func (r *Reconciler) createDriverIngressV1(ctx context.Context, app *v1beta2.Spa
 		ingressTLSHosts = defaultIngressTLS
 	}
 
-	ingressURLPath := ingressURL.Path
-	// If we're serving on a subpath, we need to ensure we create capture groups
-	if ingressURLPath != "" && ingressURLPath != "/" {
-		ingressURLPath = ingressURLPath + "(/|$)(.*)"
-	}
+	ingressURLPath := ingressSubpath(r.options.IngressControllerType, ingressURL.Path)
 
 	implementationSpecific := networkingv1.PathTypeImplementationSpecific
 
@@ -149,12 +145,12 @@ func (r *Reconciler) createDriverIngressV1(ctx context.Context, app *v1beta2.Spa
 		ingress.Annotations = ingressResourceAnnotations
 	}
 
-	// If we're serving on a subpath, we need to ensure we use the capture groups
+	// If we're serving on a subpath, the controller must strip it before proxying.
 	if ingressURL.Path != "" && ingressURL.Path != "/" {
 		if ingress.Annotations == nil {
 			ingress.Annotations = make(map[string]string)
 		}
-		ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/$2"
+		setSubpathStripAnnotation(ingress.Annotations, r.options.IngressControllerType)
 	}
 	if len(ingressTLSHosts) != 0 {
 		ingress.Spec.TLS = ingressTLSHosts
@@ -206,11 +202,7 @@ func (r *Reconciler) createDriverIngressLegacy(ctx context.Context, app *v1beta2
 	// That we convert later for extensionsv1beta1, but return as is in SparkIngress.
 	ingressTLSHosts := util.GetWebUIIngressTLS(app)
 
-	ingressURLPath := ingressURL.Path
-	// If we're serving on a subpath, we need to ensure we create capture groups.
-	if ingressURLPath != "" && ingressURLPath != "/" {
-		ingressURLPath = ingressURLPath + "(/|$)(.*)"
-	}
+	ingressURLPath := ingressSubpath(r.options.IngressControllerType, ingressURL.Path)
 
 	ingress := &extensionsv1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -244,12 +236,12 @@ func (r *Reconciler) createDriverIngressLegacy(ctx context.Context, app *v1beta2
 		ingress.Annotations = ingressResourceAnnotations
 	}
 
-	// If we're serving on a subpath, we need to ensure we use the capture groups
+	// If we're serving on a subpath, the controller must strip it before proxying.
 	if ingressURL.Path != "" && ingressURL.Path != "/" {
 		if ingress.Annotations == nil {
 			ingress.Annotations = make(map[string]string)
 		}
-		ingress.Annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/$2"
+		setSubpathStripAnnotation(ingress.Annotations, r.options.IngressControllerType)
 	}
 	if len(ingressTLSHosts) != 0 {
 		ingress.Spec.TLS = convertIngressTLSHostsToLegacy(ingressTLSHosts)
@@ -458,4 +450,32 @@ func (r *Reconciler) createDriverIngressServiceFromConfiguration(
 	serviceAnnotations := getDriverIngressServiceAnnotations(driverIngressConfiguration)
 	serviceLabels := getDriverIngressServiceLabels(driverIngressConfiguration)
 	return r.createDriverIngressService(ctx, app, portName, port, port, serviceName, serviceType, serviceAnnotations, serviceLabels)
+}
+
+// ingressSubpath returns the path to match on the ingress rule for the given
+// ingress controller. The driver always serves from the root of its service, so
+// when the ingress matches a per-application subpath that prefix has to be removed
+// before the request is proxied. ingress-nginx does that with a rewrite-target
+// referring to a capture group, which therefore has to be part of the path itself;
+// Kong matches the path as a literal prefix and strips it via an annotation, so
+// appending a capture group there would stop the route from ever matching.
+func ingressSubpath(ingressControllerType string, path string) string {
+	if path == "" || path == "/" {
+		return path
+	}
+	if ingressControllerType == common.IngressControllerKong {
+		return path
+	}
+	return path + "(/|$)(.*)"
+}
+
+// setSubpathStripAnnotation adds the annotation that makes the ingress controller
+// strip the per-application subpath before proxying to the driver. It is only
+// called when the ingress is served on a subpath.
+func setSubpathStripAnnotation(annotations map[string]string, ingressControllerType string) {
+	if ingressControllerType == common.IngressControllerKong {
+		annotations[common.KongStripPathAnnotation] = "true"
+		return
+	}
+	annotations[common.NginxRewriteTargetAnnotation] = "/$2"
 }

@@ -94,11 +94,12 @@ var (
 	defaultBatchScheduler string
 
 	// Spark web UI service and ingress
-	enableUIService    bool
-	ingressClassName   string
-	ingressURLFormat   string
-	ingressTLS         []networkingv1.IngressTLS
-	ingressAnnotations map[string]string
+	enableUIService       bool
+	ingressClassName      string
+	ingressControllerType string
+	ingressURLFormat      string
+	ingressTLS            []networkingv1.IngressTLS
+	ingressAnnotations    map[string]string
 
 	// Leader election
 	enableLeaderElection        bool
@@ -152,6 +153,11 @@ func NewStartCommand() *cobra.Command {
 				}
 			}
 
+			validIngressControllerTypes := []string{common.IngressControllerNginx, common.IngressControllerKong}
+			if !slices.Contains(validIngressControllerTypes, ingressControllerType) {
+				return fmt.Errorf("invalid value %q for --ingress-controller-type, valid values: %v", ingressControllerType, validIngressControllerTypes)
+			}
+
 			validPrecisions := []string{"nanos", "micros", "millis", "seconds", "minutes"}
 			if !slices.Contains(validPrecisions, scheduledSparkApplicationTimestampPrecision) {
 				return fmt.Errorf("invalid value %q for --scheduled-spark-application-timestamp-precision, valid values: %v", scheduledSparkApplicationTimestampPrecision, validPrecisions)
@@ -181,6 +187,7 @@ func NewStartCommand() *cobra.Command {
 
 	command.Flags().BoolVar(&enableUIService, "enable-ui-service", true, "Enable Spark Web UI service.")
 	command.Flags().StringVar(&ingressClassName, "ingress-class-name", "", "Set ingressClassName for ingress resources created.")
+	command.Flags().StringVar(&ingressControllerType, "ingress-controller-type", common.IngressControllerNginx, fmt.Sprintf("The ingress controller that serves the Spark web UI, one of %q or %q. Only affects path-based ingress URL formats; host-based formats work with any controller.", common.IngressControllerNginx, common.IngressControllerKong))
 	command.Flags().StringVar(&ingressURLFormat, "ingress-url-format", "", "Ingress URL format.")
 	command.Flags().StringVar(&ingressTLSstring, "ingress-tls", "", "JSON format string for the default TLS config on the Spark UI ingresses. e.g. '[{\"hosts\":[\"*.example.com\"],\"secretName\":\"example-secret\"}]'. `ingressTLS` in the SparkApplication spec will override this value.")
 	command.Flags().StringVar(&ingressAnnotationsString, "ingress-annotations", "", "JSON format string for the default ingress annotations for the Spark UI ingresses. e.g. '[{\"cert-manager.io/cluster-issuer\": \"letsencrypt\"}]'. `ingressAnnotations` in the SparkApplication spec will override this value.")
@@ -467,6 +474,7 @@ func newSparkApplicationReconcilerOptions() sparkapplication.Options {
 		NamespaceSelector:            namespaceSelector,
 		EnableUIService:              enableUIService,
 		IngressClassName:             ingressClassName,
+		IngressControllerType:        ingressControllerType,
 		IngressURLFormat:             ingressURLFormat,
 		IngressTLS:                   ingressTLS,
 		IngressAnnotations:           ingressAnnotations,

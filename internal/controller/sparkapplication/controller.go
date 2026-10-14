@@ -58,6 +58,7 @@ type Options struct {
 	NamespaceSelector     string
 	EnableUIService       bool
 	IngressClassName      string
+	IngressControllerType string
 	IngressURLFormat      string
 	IngressTLS            []networkingv1.IngressTLS
 	IngressAnnotations    map[string]string

@@ -411,3 +411,79 @@ func TestCreateDriverIngressService(t *testing.T) {
 		testFn(test, t)
 	}
 }
+
+func TestIngressSubpath(t *testing.T) {
+	testcases := []struct {
+		name                  string
+		ingressControllerType string
+		path                  string
+		want                  string
+	}{
+		{
+			name:                  "nginx subpath gets capture groups",
+			ingressControllerType: common.IngressControllerNginx,
+			path:                  "/default/test-app",
+			want:                  "/default/test-app(/|$)(.*)",
+		},
+		{
+			name:                  "kong subpath is left alone",
+			ingressControllerType: common.IngressControllerKong,
+			path:                  "/default/test-app",
+			want:                  "/default/test-app",
+		},
+		{
+			name:                  "empty path is left alone",
+			ingressControllerType: common.IngressControllerNginx,
+			path:                  "",
+			want:                  "",
+		},
+		{
+			name:                  "root path is left alone",
+			ingressControllerType: common.IngressControllerKong,
+			path:                  "/",
+			want:                  "/",
+		},
+		{
+			name:                  "unset controller type defaults to nginx",
+			ingressControllerType: "",
+			path:                  "/default/test-app",
+			want:                  "/default/test-app(/|$)(.*)",
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, ingressSubpath(tc.ingressControllerType, tc.path))
+		})
+	}
+}
+
+func TestSetSubpathStripAnnotation(t *testing.T) {
+	testcases := []struct {
+		name                  string
+		ingressControllerType string
+		want                  map[string]string
+	}{
+		{
+			name:                  "nginx uses rewrite-target",
+			ingressControllerType: common.IngressControllerNginx,
+			want:                  map[string]string{common.NginxRewriteTargetAnnotation: "/$2"},
+		},
+		{
+			name:                  "kong uses strip-path",
+			ingressControllerType: common.IngressControllerKong,
+			want:                  map[string]string{common.KongStripPathAnnotation: "true"},
+		},
+		{
+			name:                  "unset controller type defaults to nginx",
+			ingressControllerType: "",
+			want:                  map[string]string{common.NginxRewriteTargetAnnotation: "/$2"},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			annotations := map[string]string{}
+			setSubpathStripAnnotation(annotations, tc.ingressControllerType)
+			assert.Equal(t, tc.want, annotations)
+		})
+	}
+}

@@ -199,6 +199,31 @@ tests:
           path: spec.template.spec.containers[?(@.name=="spark-operator-controller")].args
           content: --ingress-class-name=nginx
 
+  - it: Should contain `--ingress-controller-type=nginx` arg by default if `controller.uiIngress.enable` is set to `true`
+    set:
+      controller:
+        uiService:
+          enable: true
+        uiIngress:
+          enable: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name=="spark-operator-controller")].args
+          content: --ingress-controller-type=nginx
+
+  - it: Should contain `--ingress-controller-type=kong` arg if `controller.uiIngress.controllerType` is set to `kong`
+    set:
+      controller:
+        uiService:
+          enable: true
+        uiIngress:
+          enable: true
+          controllerType: kong
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name=="spark-operator-controller")].args
+          content: --ingress-controller-type=kong
+
   - it: Should contain `--ingress-tls` arg if `controller.uiIngress.enable` is set to `true` and `controller.uiIngress.tls` is set
     set:
       controller:

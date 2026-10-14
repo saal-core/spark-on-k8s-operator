@@ -54,3 +54,26 @@ const (
 	// Epsilon is a small number used to compare 64 bit floating point numbers.
 	Epsilon = 1e-9
 )
+
+// Ingress controller types supported for path-based routing of the Spark web UI.
+// Host-based routing (an ingress URL format without a path) works with any
+// controller and is unaffected by this setting.
+const (
+	// IngressControllerNginx is the ingress-nginx controller. It is the default,
+	// matching upstream behaviour.
+	IngressControllerNginx = "nginx"
+	// IngressControllerKong is the Kong ingress controller.
+	IngressControllerKong = "kong"
+)
+
+// Ingress annotations used to strip the per-application subpath before the
+// request reaches the Spark driver. Each controller spells this differently.
+const (
+	// NginxRewriteTargetAnnotation rewrites the request to the capture group that
+	// createDriverIngress appends to the ingress path.
+	NginxRewriteTargetAnnotation = "nginx.ingress.kubernetes.io/rewrite-target"
+	// KongStripPathAnnotation tells Kong to strip the matched path prefix before
+	// proxying to the upstream service. Kong matches the path as a literal prefix,
+	// so it needs no capture group.
+	KongStripPathAnnotation = "konghq.com/strip-path"
+)

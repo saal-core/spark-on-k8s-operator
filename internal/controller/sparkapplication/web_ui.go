@@ -46,7 +46,13 @@ func (r *Reconciler) configWebUI(_ context.Context, app *v1beta2.SparkApplicatio
 		app.Spec.SparkConf = make(map[string]string)
 	}
 	util.SetIfNotExists(app.Spec.SparkConf, common.SparkUIProxyBase, ingressURL.Path)
-	util.SetIfNotExists(app.Spec.SparkConf, common.SparkUIProxyRedirectURI, "/")
+	// Under Kong, defaulting spark.ui.proxyRedirectUri to "/" makes the UI redirect
+	// to the root of the host and lose the per-application subpath, so only
+	// proxyBase is set and Spark keeps emitting links under the subpath. An
+	// application can still set proxyRedirectUri explicitly in its own sparkConf.
+	if r.options.IngressControllerType != common.IngressControllerKong {
+		util.SetIfNotExists(app.Spec.SparkConf, common.SparkUIProxyRedirectURI, "/")
+	}
 	return nil
 }
 

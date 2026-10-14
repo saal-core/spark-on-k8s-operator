@@ -79,6 +79,9 @@ spec:
         {{- with .Values.controller.uiIngress.ingressClassName }}
         - --ingress-class-name={{ . }}
         {{- end }}
+        {{- with .Values.controller.uiIngress.controllerType }}
+        - --ingress-controller-type={{ . }}
+        {{- end }}
         {{- with .Values.controller.uiIngress.tls }}
         - --ingress-tls={{ . | toJson }}
         {{- end }}
